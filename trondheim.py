@@ -71,8 +71,8 @@ def publishMqtt():
     now = datetime.datetime.now()
     #print(now)
     # client.publish(topic, now.strftime('%H:%M:%S'))
-    id = "sivert"
-    topic = id + "/test"
+    id = "weather"
+    topic = id + "/trondheim"
     print(myData.json_dataPayload)
     client.publish(topic, myData.json_dataPayload)
     print('Message Published @topic ' + topic)
