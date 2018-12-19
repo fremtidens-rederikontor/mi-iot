@@ -84,13 +84,13 @@ while n>0:
     publishMqtt()
 
     # Sleep time to provide total movement over 15 minutes.
-    time.sleep(1)
+    time.sleep(9)
     n=n-1
 
 if(DEBUG):
     print('finished')
 
-time.sleep(10)
+time.sleep(300)
 
 # Setting up the broker information
 brokerAddress = "168.63.93.40"
@@ -121,7 +121,7 @@ while n>0:
     publishMqtt()
 
     # Sleep time to provide total movement over 15 minutes.
-    time.sleep(1)
+    time.sleep(9)
     n=n-1
 
 if(DEBUG):
