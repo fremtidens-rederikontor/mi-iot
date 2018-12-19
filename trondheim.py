@@ -25,7 +25,7 @@ class myData:
 
     def createPayload(self, temp, windSpeed, humidity, pressure):
         now = datetime.datetime.now()
-        data = { "temperature": temp, "windSpeed": windSpeed, "humidity": humidity, "pressure": pressure}
+        data = { "deviceName": wTrondheim,"temperature": temp, "windSpeed": windSpeed, "humidity": humidity, "pressure": pressure}
         self.json_dataPayload = json.dumps(data,indent=4, sort_keys=True, default=str)
 
     def returnPayload(self):
