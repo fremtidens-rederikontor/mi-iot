@@ -4,12 +4,26 @@ import urllib2
 import numpy as np
 from bs4 import BeautifulSoup
 import xarray
+import paho.mqtt.client as mqtt
+import time
 
+def convertmillis(dt):
+    return time.mktime(dt.timetuple()) * 1000
 
 def unix_time_millis(dt):
     return (dt - epoch).total_seconds() * 1000.0
 
-def loop():
+def publishMqtt(payload, topictype):
+    id = 'dataset/boye'
+    topic = id + '/e39' + '/' + topictype
+    client.publish(topic, payload)
+    print('Message Published @topic ' + topic)
+
+def on_connect(client, userdata, flags, rc):
+    print("Connected with result code " + str(rc))
+    client.subscribe("ntnu-ocean")
+
+def fetch_and_publish():
     #Iterating through all html entries found
     for object in meta:
         #Operate only on .nc files
@@ -36,11 +50,8 @@ def loop():
             varkeys = data.variables.keys()
 
             # Print variable data to a file
-            filename = 'data_' + tempname + '.json'
-            file = open(filename, 'w')
-
-            #print 'DATA DIMENSION: ' + str(data.dims) + '\n' + 'DIMENSION LENGTH: '
-            #print len(data.dims)
+            #filename = 'data_' + tempname + '.json'
+            #file = open(filename, 'w')
 
             #Stores all variable data for given time in a array
             kwargs = {}
@@ -52,45 +63,68 @@ def loop():
                 #Checks how many dimensions a variable is dependent on
                 variabledimension = len(data[key].dims)
                 try:
-                    #Fill nan-values by propogating values forward
-                    data[key].ffill
                     # Some of the variables only depend on time, while others
                     # have two dimensions, where one is depth
                     # Checking for length of dimensions, and setting standard
                     # depth to 5.
                     if variabledimension < 2:
-                        # Check wether the dimension is time or depth, and also forces time to be
+                        # Check weather the dimension is time or depth, and also forces time to be
                         # in timestamp(millis)
                         if 'time' in key:
-                            kwargs[key] = str(currentmillis)
+                            kwargs[key] = currentmillis
                         elif 'time' in str(data[key].dims):
-                            kwargs[key] = str(data[key].sel(time=currenttime64, method='nearest').values)
+                            kwargs[key] = float(str(data[key].sel(time=currenttime64, method='nearest').values))
                         elif 'depth' in str(data[key].dims):
-                            kwargs[key] = str(data[key].sel(depth=std_depth, method='nearest').values)
+                            kwargs[key] = float(str(data[key].sel(depth=std_depth, method='nearest').values))
                         else:
-                            kwargs[key] = str(data[key].sel(time=currenttime64, method='nearest').values)
+                            kwargs[key] = float(str(data[key].sel(time=currenttime64, method='nearest').values))
                     elif variabledimension > 1:
-                        kwargs[key] = str(data[key].sel(depth=std_depth, time=currenttime64, method='nearest').values)
+                        kwargs[key] = float(str(data[key].sel(depth=std_depth, time=currenttime64, method='nearest').values))
                 except Exception as e:
                       print e
 
             #Add location stamp
             kwargs['deviceName'] = locationname
-            jsondata = json.dumps(kwargs, indent=2)
-            file.write(jsondata)
-            file.close()
+            json_data = json.dumps(kwargs, indent=2)
+            print locationname
+            if 'adcp' in locationname:
+                publishMqtt(json_data,'acdcp')
+            elif 'aquadopp' in locationname:
+                print 'aquadopp'
+                publishMqtt(json_data,'aquadopp')
+            elif 'ctd' in locationname:
+                print 'ctd'
+                publishMqtt(json_data, 'ctd')
+            elif 'raw_wind' in locationname:
+                print 'raw_wind'
+                publishMqtt(json_data, 'raw')
+            elif 'wave' in locationname:
+                print 'wave'
+                publishMqtt(json_data, 'wave')
+            elif 'wind' in locationname:
+                print 'wind'
+                #publishMqtt(json_data, 'wind')
+            #file.write(jsondata)
+            #file.close()
+
+#Set up connection
+brokerAddress = "168.63.93.40"
+client = mqtt.Client()
+#client.username_pw_set("")
+client.on_connect = on_connect
+client.connect(brokerAddress, 9999)
 
 #In datetime format
 currenttime = dt.datetime.now()
-deltatime = dt.timedelta(minutes=10)
+deltatime = dt.timedelta(minutes=20)
 #Find values for 20 minutes ago, since current values are
 #always nan due to delay from sensors.
 delaytime = currenttime - deltatime
 #Converting to datetime64 format
 currenttime64 = np.datetime64(delaytime)
-#Convertin time to timestamp in millis
+#Converting time to timestamp in millis
 epoch = dt.datetime.utcfromtimestamp(0)
-currentmillis = unix_time_millis(delaytime)
+currentmillis = convertmillis(delaytime)
 
 #Dynamically change date based on datetime now
 year = str(currenttime.year)
@@ -112,5 +146,6 @@ meta = []
 for a in soup.find_all('a', href=True):
     meta.append(a['href'].split('='))
 
-loop()
+fetch_and_publish()
+
 
