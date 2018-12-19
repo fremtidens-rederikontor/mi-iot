@@ -102,7 +102,7 @@ def fetch_and_publish():
             elif 'wave' in locationname:
                 publishMqtt(json_data, 'wave')
             elif 'wind' in locationname:
-                #publishMqtt(json_data, 'wind')
+                publishMqtt(json_data, 'wind')
             #file.write(jsondata)
             #file.close()
 
