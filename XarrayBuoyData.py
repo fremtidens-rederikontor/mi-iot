@@ -1,9 +1,10 @@
-import xarray
 import datetime as dt
-import numpy as np
 import json
-from bs4 import BeautifulSoup
 import urllib2
+import numpy as np
+from bs4 import BeautifulSoup
+import xarray
+
 
 def loop():
     #Iterating through all html entries found
@@ -16,12 +17,11 @@ def loop():
             tempname = str(object).split('/')
             tempname = str(tempname[5]).split('.')
             tempname = str(tempname[0])
-            print 'Fetchurl: '
             print fetchurl
 
             #Imports dataset
             data = xarray.open_dataset(fetchurl)
-
+            
             #Finds all variable handles for given nc file
             varkeys = data.variables.keys()
 
@@ -29,17 +29,37 @@ def loop():
             filename = 'data_' + tempname + '.json'
             file = open(filename, 'w')
 
+            #print 'DATA DIMENSION: ' + str(data.dims) + '\n' + 'DIMENSION LENGTH: '
+            #print len(data.dims)
+
             #Stores all variable data for given time in a array
             kwargs = {}
+            dimensionlength = len(data.dims)
+            #For variables depending on depth dimensions
+            #use std depth as 5 meters.
+            std_depth = 5
             for key in varkeys:
                 try:
-                    kwargs[key] = str(data[key].sel(time = currenttime64, method='nearest').values)
+                    # Some of the variables only depend on time, while others
+                    # have two dimensions, where one is depth
+                    # Checking for length of dimensions, and setting standard
+                    # depth to 5.
+                    if dimensionlength < 2:
+                        kwargs[key] = str(data[key].sel(time = currenttime64, method='nearest').values)
+                    elif dimensionlength > 1:
+                        kwargs[key] = str(data[key].sel(depth = std_depth,time = currenttime64, method='nearest').values)
                 except Exception as e:
-                    print e
+                    # Some of the variables in the same dataset only have one dimension, either depth
+                    # or time. Assigning values based on error message.
+                    if 'time' in str(e):
+                        kwargs[key] = str(data[key].sel(depth = std_depth, method='nearest').values)
+                    elif 'depth' in str(e):
+                        kwargs[key] = str(data[key].sel(time = currenttime64, method='nearest').values)
+                    else:
+                          print e
 
 
             jsondata = json.dumps(kwargs, indent=2)
-
             file.write(jsondata)
             file.close()
 
@@ -70,5 +90,4 @@ for a in soup.find_all('a', href=True):
 
 loop()
 
-#http://thredds.met.no/thredds/dodsC/obs/buoy-svv-e39/2018/12/19/20181219_080000_E39_D_Breisundet_adcp.nc
-#dimensions or multi-index levels ['time'] do not exist
+    
