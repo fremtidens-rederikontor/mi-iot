@@ -23,9 +23,9 @@ class myData:
         self.pressure = pressure
         self.temp = temp
 
-    def createPayload(self, temp, windSpeed, humidity, pressure):
+    def createPayload(self, temp, windSpeed, humidity, pressure, deviceName):
         now = datetime.datetime.now()
-        data = { "deviceName": wAalesund,"temperature": temp, "windSpeed": windSpeed, "humidity": humidity, "pressure": pressure}
+        data = { "deviceName": deviceName,"temperature": temp, "windSpeed": windSpeed, "humidity": humidity, "pressure": pressure}
         self.json_dataPayload = json.dumps(data,indent=4, sort_keys=True, default=str)
 
     def returnPayload(self):
@@ -65,7 +65,7 @@ def myWeatherRequest():
     humidity = data['main']['humidity']
     pressure = data['main']['pressure']
     print wind,temp,humidity,pressure
-    myData.createPayload(temp, wind, humidity, pressure)
+    myData.createPayload(temp, wind, humidity, pressure, "wAalesund")
 
 def publishMqtt():
     now = datetime.datetime.now()
