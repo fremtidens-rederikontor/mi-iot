@@ -79,7 +79,11 @@ def fetch_and_publish():
                         else:
                             kwargs[key] = float(str(data[key].sel(time=currenttime64, method='nearest').values))
                     elif variabledimension > 1:
-                        kwargs[key] = float(str(data[key].sel(depth=std_depth, time=currenttime64, method='nearest').values))
+                        # Pressure always returns NAN and should therefore not be included.
+                        if 'Pressure' in key:
+                            continue
+                        else:
+                            kwargs[key] = float(str(data[key].sel(depth=std_depth, time=currenttime64, method='nearest').values))
                 except Exception as e:
                       print e
 
@@ -90,19 +94,14 @@ def fetch_and_publish():
             if 'adcp' in locationname:
                 publishMqtt(json_data,'acdcp')
             elif 'aquadopp' in locationname:
-                print 'aquadopp'
                 publishMqtt(json_data,'aquadopp')
             elif 'ctd' in locationname:
-                print 'ctd'
                 publishMqtt(json_data, 'ctd')
             elif 'raw_wind' in locationname:
-                print 'raw_wind'
                 publishMqtt(json_data, 'raw')
             elif 'wave' in locationname:
-                print 'wave'
                 publishMqtt(json_data, 'wave')
             elif 'wind' in locationname:
-                print 'wind'
                 #publishMqtt(json_data, 'wind')
             #file.write(jsondata)
             #file.close()
