@@ -84,13 +84,20 @@ while n>0:
     publishMqtt()
 
     # Sleep time to provide total movement over 15 minutes.
-    time.sleep(9)
+    time.sleep(1)
     n=n-1
 
 if(DEBUG):
     print('finished')
 
-time.sleep(300)
+time.sleep(10)
+
+# Setting up the broker information
+brokerAddress = "168.63.93.40"
+client = mqtt.Client()
+#client.username_pw_set("3030304040BBB", "crazyfrog123")
+client.on_connect = on_connect
+client.connect(brokerAddress, 9999)
 
 # Iterating through 100 steps of the movement from point B to A.
 n = 100
@@ -114,7 +121,7 @@ while n>0:
     publishMqtt()
 
     # Sleep time to provide total movement over 15 minutes.
-    time.sleep(9)
+    time.sleep(1)
     n=n-1
 
 if(DEBUG):
