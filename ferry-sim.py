@@ -80,7 +80,7 @@ while n>0:
     lonFerry = lonOutput
 
     # Configures the data and publishes it to broker.
-    myData.createPayload(str(latOutput), str(lonOutput), "festoyFerry")
+    myData.createPayload(latOutput, lonOutput, "festoyFerry")
     publishMqtt()
 
     # Sleep time to provide total movement over 15 minutes.
@@ -110,7 +110,7 @@ while n>0:
     lonFerry = lonOutput
 
     # Configures the data and publishes it to broker.
-    myData.createPayload(str(latOutput), str(lonOutput), "festoyFerry")
+    myData.createPayload(latOutput, lonOutput, "festoyFerry")
     publishMqtt()
 
     # Sleep time to provide total movement over 15 minutes.
