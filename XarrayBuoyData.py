@@ -15,7 +15,7 @@ def loop():
             fetchurl = 'http://thredds.met.no/thredds/dodsC/' + object[1]
             # Extract station name from URL
             tempname = str(object).split('/')
-            tempname = str(tempname[5]).split('.')
+            tempname = str(tempname[4]).split('.')
             tempname = str(tempname[0])
             print fetchurl
 
@@ -38,26 +38,37 @@ def loop():
             #For variables depending on depth dimensions
             #use std depth as 5 meters.
             std_depth = 5
+
             for key in varkeys:
                 try:
                     # Some of the variables only depend on time, while others
                     # have two dimensions, where one is depth
                     # Checking for length of dimensions, and setting standard
                     # depth to 5.
+                    counter = 0
                     if dimensionlength < 2:
-                        kwargs[key] = str(data[key].sel(time = currenttime64, method='nearest').values)
+                        if 'time' in str(data[key]):
+                            counter +=1
+                            kwargs[str(key) + str(counter)] = str(data[key].sel(time=currenttime64, method='nearest').values)
+                        else:
+                         kwargs[key] = str(data[key].sel(time=currenttime64, method='nearest').values)
                     elif dimensionlength > 1:
-                        kwargs[key] = str(data[key].sel(depth = std_depth,time = currenttime64, method='nearest').values)
+                        if 'time' in str(data[key]):
+                            counter += 1
+                            kwargs[str(key) + str(counter)] = str(data[key].sel(depth=std_depth, time=currenttime64, method='nearest').values)
+                        else:
+                            kwargs[key] = str(data[key].sel(depth=std_depth, time=currenttime64, method='nearest').values)
                 except Exception as e:
                     # Some of the variables in the same dataset only have one dimension, either depth
                     # or time. Assigning values based on error message.
                     if 'time' in str(e):
-                        kwargs[key] = str(data[key].sel(depth = std_depth, method='nearest').values)
+                        kwargs[key] = str(data[key].sel(depth=std_depth, method='nearest').values)
                     elif 'depth' in str(e):
-                        kwargs[key] = str(data[key].sel(time = currenttime64, method='nearest').values)
+                        kwargs[key] = str(data[key].sel(time=currenttime64, method='nearest').values)
                     else:
+                          print '---EXCEPTION---'
                           print e
-
+                          print str(data[key])
 
             jsondata = json.dumps(kwargs, indent=2)
             file.write(jsondata)
@@ -65,7 +76,7 @@ def loop():
 
 #In datetime format
 currenttime = dt.datetime.now()
-deltatime = dt.timedelta(minutes=500)
+deltatime = dt.timedelta(minutes=50)
 #Find values for 20 minutes ago, since current values are
 #always nan due to delay from sensors.
 delaytime = currenttime - deltatime
@@ -77,7 +88,11 @@ year = str(currenttime.year)
 month = str(currenttime.month)
 day = str(currenttime.day)
 datestring = year+'/'+month+'/'+year+month
-catalogUrl = 'http://thredds.met.no/thredds/catalog/obs/buoy-svv-e39/' + year + '/' + month + '/' + day + '/' + 'catalog.html'
+#DAILY CATALOG
+#catalogUrl = 'http://thredds.met.no/thredds/catalog/obs/buoy-svv-e39/' + year + '/' + month + '/' + day + '/' + 'catalog.html'
+#MONTHLY CATALOG
+catalogUrl = 'http://thredds.met.no/thredds/catalog/obs/buoy-svv-e39/' + year + '/' + month + '/' + 'catalog.html'
+print catalogUrl
 
 #Fetches all the location names in the catalog
 content = urllib2.urlopen(catalogUrl)
@@ -90,4 +105,4 @@ for a in soup.find_all('a', href=True):
 
 loop()
 
-    
+
