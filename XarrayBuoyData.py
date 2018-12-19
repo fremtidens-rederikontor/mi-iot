@@ -5,10 +5,9 @@ import numpy as np
 from bs4 import BeautifulSoup
 import xarray
 
-
 def loop():
     #Iterating through all html entries found
-    for object in meta:
+    for object in metarefined:
         #Operate only on .nc files
         if '.nc' in str(object):
             print 'File found'
@@ -21,7 +20,7 @@ def loop():
 
             #Imports dataset
             data = xarray.open_dataset(fetchurl)
-            
+
             #Finds all variable handles for given nc file
             varkeys = data.variables.keys()
 
@@ -34,41 +33,38 @@ def loop():
 
             #Stores all variable data for given time in a array
             kwargs = {}
-            dimensionlength = len(data.dims)
+
             #For variables depending on depth dimensions
             #use std depth as 5 meters.
             std_depth = 5
-
             for key in varkeys:
+                variabledimension = len(data[key].dims)
+               # print 'KEY'
+               # print key
                 try:
+                    #Fill nan-values by propogating values forward
+                    data[key].ffill
+
+
+
                     # Some of the variables only depend on time, while others
                     # have two dimensions, where one is depth
                     # Checking for length of dimensions, and setting standard
                     # depth to 5.
-                    counter = 0
-                    if dimensionlength < 2:
-                        if 'time' in str(data[key]):
-                            counter +=1
-                            kwargs[str(key) + str(counter)] = str(data[key].sel(time=currenttime64, method='nearest').values)
+                    if variabledimension < 2:
+                        # Check wether the dimension is time or depth
+                        if 'time' in str(data[key].dims):
+                            kwargs[key] = str(data[key].sel(time=currenttime64, method='nearest').values)
+                        elif 'depth' in str(data[key].dims):
+                            kwargs[key] = str(data[key].sel(depth=std_depth, method='nearest').values)
                         else:
-                         kwargs[key] = str(data[key].sel(time=currenttime64, method='nearest').values)
-                    elif dimensionlength > 1:
-                        if 'time' in str(data[key]):
-                            counter += 1
-                            kwargs[str(key) + str(counter)] = str(data[key].sel(depth=std_depth, time=currenttime64, method='nearest').values)
-                        else:
-                            kwargs[key] = str(data[key].sel(depth=std_depth, time=currenttime64, method='nearest').values)
+                            kwargs[key] = str(data[key].sel(time=currenttime64, method='nearest').values)
+                    elif variabledimension > 1:
+                        kwargs[key] = str(data[key].sel(depth=std_depth, time=currenttime64, method='nearest').values)
                 except Exception as e:
-                    # Some of the variables in the same dataset only have one dimension, either depth
-                    # or time. Assigning values based on error message.
-                    if 'time' in str(e):
-                        kwargs[key] = str(data[key].sel(depth=std_depth, method='nearest').values)
-                    elif 'depth' in str(e):
-                        kwargs[key] = str(data[key].sel(time=currenttime64, method='nearest').values)
-                    else:
-                          print '---EXCEPTION---'
-                          print e
-                          print str(data[key])
+                   #   print str(data[key].dims)
+                      print data[key].indexes
+                      print e
 
             jsondata = json.dumps(kwargs, indent=2)
             file.write(jsondata)
@@ -99,10 +95,19 @@ content = urllib2.urlopen(catalogUrl)
 soup = BeautifulSoup(content, "html.parser")
 meta = []
 
+count = 0
 #Appends and split the string in two objects. To access the relevant use meta[i][1]
 for a in soup.find_all('a', href=True):
     meta.append(a['href'].split('='))
 
+#Sorting out only the newest entries in the catalog.
+metarefined = []
+for element in meta:
+    if '.nc' in str(element):
+         print element
+         metarefined.append(element)
+         count +=1
+print count
 loop()
 
 
