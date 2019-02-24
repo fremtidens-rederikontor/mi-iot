@@ -1,3 +1,4 @@
+import sys
 import json
 import paho.mqtt.client as mqtt
 import datetime, time
@@ -126,3 +127,5 @@ while n>0:
 
 if(DEBUG):
     print('finished')
+
+sys.exit(0)
