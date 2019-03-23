@@ -56,23 +56,24 @@ def on_message(client, userdata, msg):
 
 def myWeatherRequest():
     apikey = "45bcb62bc6a5da5d1f3fecd9eb35ab46"
-    cityId = "3153861"
-    URL = "https://api.openweathermap.org/data/2.5/weather?id="+cityId+"&APPID="+apikey
+    lon = "6.587480"
+    lat = "62.395940"
+    URL = "https://api.openweathermap.org/data/2.5/weather?lat=" + lat + "&lon=" + lon + "&APPID="+apikey
     r = requests.get(URL).text
     data = json.loads(r)
     wind = data['wind']['speed']
     temp = round(data['main']['temp'] - 273, 2)
     humidity = data['main']['humidity']
     pressure = data['main']['pressure']
-    print wind,temp,humidity,pressure
-    myData.createPayload(temp, wind, humidity, pressure, 'wHareid')
+    print (wind,temp,humidity,pressure)
+    myData.createPayload(temp, wind, humidity, pressure, 'wSykkylven')
 
 def publishMqtt():
     now = datetime.datetime.now()
     #print(now)
     # client.publish(topic, now.strftime('%H:%M:%S'))
     id = "weather"
-    topic = id + "/hareid"
+    topic = id + "/sykkylven"
     print(myData.json_dataPayload)
     client.publish(topic, myData.json_dataPayload)
     print('Message Published @topic ' + topic)

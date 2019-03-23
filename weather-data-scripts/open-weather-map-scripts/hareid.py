@@ -25,7 +25,7 @@ class myData:
 
     def createPayload(self, temp, windSpeed, humidity, pressure, deviceName):
         now = datetime.datetime.now()
-        data = { "deviceName": deviceName,"temperature": temp, "windSpeed": windSpeed, "humidity": humidity, "pressure": pressure}
+        data = { "deviceName": deviceName, "temperature": temp, "windSpeed": windSpeed, "humidity": humidity, "pressure": pressure}
         self.json_dataPayload = json.dumps(data,indent=4, sort_keys=True, default=str)
 
     def returnPayload(self):
@@ -56,7 +56,7 @@ def on_message(client, userdata, msg):
 
 def myWeatherRequest():
     apikey = "45bcb62bc6a5da5d1f3fecd9eb35ab46"
-    cityId = "6453341"
+    cityId = "3153861"
     URL = "https://api.openweathermap.org/data/2.5/weather?id="+cityId+"&APPID="+apikey
     r = requests.get(URL).text
     data = json.loads(r)
@@ -64,15 +64,15 @@ def myWeatherRequest():
     temp = round(data['main']['temp'] - 273, 2)
     humidity = data['main']['humidity']
     pressure = data['main']['pressure']
-    print wind,temp,humidity,pressure
-    myData.createPayload(temp, wind, humidity, pressure, "wAalesund")
+    print (wind,temp,humidity,pressure)
+    myData.createPayload(temp, wind, humidity, pressure, 'wHareid')
 
 def publishMqtt():
     now = datetime.datetime.now()
     #print(now)
     # client.publish(topic, now.strftime('%H:%M:%S'))
     id = "weather"
-    topic = id + "/aalesund"
+    topic = id + "/hareid"
     print(myData.json_dataPayload)
     client.publish(topic, myData.json_dataPayload)
     print('Message Published @topic ' + topic)
@@ -86,4 +86,3 @@ client.connect(brokerAddress, 9999)
 myData = myData()
 myWeatherRequest()
 publishMqtt()
-
