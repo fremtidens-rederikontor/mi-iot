@@ -64,7 +64,7 @@ def myWeatherRequest():
     temp = round(data['main']['temp'] - 273, 2)
     humidity = data['main']['humidity']
     pressure = data['main']['pressure']
-    print wind,temp,humidity,pressure
+    print (wind,temp,humidity,pressure)
     myData.createPayload(temp, wind, humidity, pressure)
 
 def publishMqtt():
