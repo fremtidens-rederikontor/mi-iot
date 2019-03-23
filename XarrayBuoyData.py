@@ -1,11 +1,17 @@
+# -*- coding: utf-8 -*-
 import datetime as dt
 import json
-import urllib2
+import urllib3
 import numpy as np
 from bs4 import BeautifulSoup
+import urllib.request
 import xarray
 import paho.mqtt.client as mqtt
 import time
+import sys
+import netCDF4
+
+
 
 def convertmillis(dt):
     return time.mktime(dt.timetuple()) * 1000
@@ -29,18 +35,25 @@ def fetch_and_publish():
         # Operate only on .nc files
         if '.nc' in str(object):
             print('File found')
-            fetchurl = 'http://thredds.met.no/thredds/dodsC/' + object[1]
+            fetchurl = 'http://thredds.met.no/thredds/dodsC/' + object[1] # To visit the URL through a browser add '.html' extension at the end.
+
+            # Test utf-8 encoding
+            fetchurl = fetchurl.encode('utf-8')
+            fetchurl = fetchurl.decode('utf-8')
+            
+            
             #  Extract station name from URL
             tempname = str(object).split('/')
             tempname = str(tempname[4]).split('.')
             tempname = str(tempname[0])
             print(fetchurl)
+
             # Create location name from URL
             locationname = tempname.split('_')
             locationname = '_'.join(locationname[1:])
 
             # Imports dataset
-            data = xarray.open_dataset(fetchurl)
+            data = xarray.open_dataset(fetchurl, engine='netcdf4')
 
             #  Removes duplicate entries of time and depth indexes to avoid
             #  conflict
@@ -146,8 +159,9 @@ if __name__== "__main__":
     print(catalogUrl)
     
     # Fetches all the location names in the catalog
-    content = urllib2.urlopen(catalogUrl)
-    soup = BeautifulSoup(content, "html.parser")
+    content = urllib.request.urlopen(catalogUrl)
+    soup = BeautifulSoup(content.read().decode('utf-8'), "html.parser")
+
     meta = []
 
     # Appends and split the string in two objects. To access the relevant use meta[i][1]
@@ -155,3 +169,8 @@ if __name__== "__main__":
         meta.append(a['href'].split('='))
 
     fetch_and_publish()
+
+    # Shut down the script after one iteration
+    print('Script finished. Exiting..')
+    sys.exit(0)    
+
