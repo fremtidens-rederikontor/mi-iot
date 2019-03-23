@@ -1,3 +1,4 @@
+import sys
 import json
 import paho.mqtt.client as mqtt
 import datetime, time
@@ -81,6 +82,7 @@ while n>0:
 
     # Configures the data and publishes it to broker.
     myData.createPayload(str(latOutput), str(lonOutput), "festoyFerry")
+    myData.createPayload(latOutput, lonOutput, "festoyFerry")
     publishMqtt()
 
     # Sleep time to provide total movement over 15 minutes.
@@ -91,6 +93,13 @@ if(DEBUG):
     print('finished')
 
 time.sleep(300)
+
+# Setting up the broker information
+brokerAddress = "168.63.93.40"
+client = mqtt.Client()
+#client.username_pw_set("3030304040BBB", "crazyfrog123")
+client.on_connect = on_connect
+client.connect(brokerAddress, 9999)
 
 # Iterating through 100 steps of the movement from point B to A.
 n = 100
@@ -110,7 +119,7 @@ while n>0:
     lonFerry = lonOutput
 
     # Configures the data and publishes it to broker.
-    myData.createPayload(str(latOutput), str(lonOutput), "festoyFerry")
+    myData.createPayload(latOutput, lonOutput, "festoyFerry")
     publishMqtt()
 
     # Sleep time to provide total movement over 15 minutes.
@@ -119,3 +128,5 @@ while n>0:
 
 if(DEBUG):
     print('finished')
+
+sys.exit(0)
