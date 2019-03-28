@@ -82,9 +82,14 @@ def fetch_and_publish():
             locationname = tempname.split('_')
             locationname = '_'.join(locationname[1:])
 
+            try:
             # Imports dataset
-            data = xarray.open_dataset(fetchurl, engine='netcdf4')
-
+            data = xarray.open_dataset(fetchurl, engine='netcdf4', decode_times = True)
+            except Exception as error:
+                print('Error when trying to fetch dataset with xarray', error)
+                error_occured('set')
+                pass
+            
             #  Removes duplicate entries of time and depth indexes to avoid
             #  conflict
             try:
