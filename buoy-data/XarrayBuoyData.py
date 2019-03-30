@@ -42,7 +42,10 @@ def publishMqtt(payload, topictype):
         id = 'dataset/boye'
         topic = id + '/e39' + '/' + topictype
         try:
+            # Add a timestamp to print when the package is publsihed for debugging.
+            publishtime = dt.datetime.now()
             client.publish(topic, payload)
+            print('Time: ', publishtime)
             print('Message Published @topic ' + topic)
         except Exception as error:
             print('Error in publish MQTT function ', error)
@@ -83,8 +86,8 @@ def fetch_and_publish():
             locationname = '_'.join(locationname[1:])
 
             try:
-            # Imports dataset
-            data = xarray.open_dataset(fetchurl, engine='netcdf4', decode_times = True)
+                # Imports dataset
+                data = xarray.open_dataset(fetchurl, engine='netcdf4', decode_times = True)
             except Exception as error:
                 print('Error when trying to fetch dataset with xarray', error)
                 error_occured('set')
